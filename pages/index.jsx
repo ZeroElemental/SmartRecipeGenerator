@@ -14,6 +14,7 @@ export default function Home() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [showFavorites, setShowFavorites] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   async function fetchMatches() {
     setLoading(true);
@@ -24,40 +25,41 @@ export default function Home() {
         body: JSON.stringify({ ingredients, diet, difficulty, maxTime })
       });
       const json = await res.json();
+      // Filter out 0% matches
+      if (json.matches) {
+        json.matches = json.matches.filter(r => r.matchPercentage > 0);
+      }
       setResults(json);
     } catch (e) {
       console.error(e);
       setResults({ error: 'Matching failed. Please try again.' });
     } finally {
-  
-        async function fetchAiRecipes() {
-          setAiLoading(true);
-          setAiError('');
-          try {
-            const res = await fetch('/api/aiRecipes', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ingredients, count: 6 })
-            });
-            const data = await res.json();
-            if (!res.ok) {
-              setAiError(data.error || 'AI service error');
-              return;
-            }
-
-            // Merge AI recipes with existing list while avoiding id collisions
-            const aiRecipes = data.recipes || [];
-            const existingIds = new Set(results.matches.map(r => r.id));
-            const merged = [...results.matches];
-            aiRecipes.forEach(r => { if (!existingIds.has(r.id)) merged.push(r); });
-            setResults({ matches: merged });
-          } catch (e) {
-            setAiError('Failed to fetch AI recipes');
-          } finally {
-            setAiLoading(false);
-          }
-        }
       setLoading(false);
+    }
+  }
+
+  async function fetchAiRecipes() {
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const res = await fetch('/api/aiRecipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients, diet, difficulty, maxTime, count: 6 })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAiError(data.error || 'AI service error');
+        return;
+      }
+
+      // Replace with AI recipes (add matchPercentage for consistency)
+      const aiRecipes = (data.recipes || []).map(r => ({ ...r, matchPercentage: 100, isAI: true }));
+      setResults({ matches: aiRecipes });
+    } catch (e) {
+      setAiError('Failed to fetch AI recipes');
+    } finally {
+      setAiLoading(false);
     }
   }
 
@@ -68,50 +70,63 @@ export default function Home() {
   }, [ingredients, diet, difficulty, maxTime]);
 
   return (
-    <main className="container">
-      {/* Hero Section */}
-      <header className="hero">
-        <h1>Smart Recipe Generator</h1>
-        <p className="tagline">Turn your ingredients into delicious meals with AI-powered suggestions</p>
-        <div className="stats">
-          <div className="stat-card">
-            <span className="stat-number">20+</span>
-            <span className="stat-label">Recipes</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">8</span>
-            <span className="stat-label">Cuisines</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-number">10+</span>
-            <span className="stat-label">Substitutions</span>
-          </div>
-        </div>
-      </header>
+    <>
+      {/* Sidebar Navigation */}
+      <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>×</button>
+        <nav className="sidebar-nav">
+          <a href="#" onClick={(e) => { e.preventDefault(); setShowFavorites(false); setSidebarOpen(false); }}>
+            🏠 Home
+          </a>
+          <a href="#" onClick={(e) => { e.preventDefault(); setShowFavorites(true); setSidebarOpen(false); }}>
+            ⭐ Favorites
+          </a>
+        </nav>
+      </div>
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-      {/* How it Works - only show when no ingredients */}
-      {ingredients.length === 0 && !loading && (
-        <>
-          <section className="how-it-works">
-            <h2>How It Works</h2>
-            <div className="steps">
-              <div className="step">
-                <h3>1. Upload or Enter</h3>
-                <p>Upload a photo of your ingredients or type them manually</p>
-              </div>
-              <div className="step">
-                <h3>2. Filter & Match</h3>
-                <p>Apply dietary preferences and get smart recipe matches</p>
-              </div>
-              <div className="step">
-                <h3>3. Cook & Enjoy</h3>
-                <p>Follow step-by-step instructions and rate your favorites</p>
-              </div>
+      <main className="container">
+        {/* Menu button */}
+        <button className="menu-btn" onClick={() => setSidebarOpen(true)}>☰</button>
+
+        {/* Hero Section */}
+        <header className="hero">
+          <h1>Smart Recipe Generator</h1>
+          <p className="tagline">Turn your ingredients into delicious meals with AI-powered suggestions</p>
+          <div className="stats">
+            <div className="stat-card">
+              <span className="stat-number">30+</span>
+              <span className="stat-label">Recipes</span>
             </div>
-          </section>
-          {/* features moved to footer for a cleaner hero section */}
-        </>
-      )}
+            <div className="stat-card">
+              <span className="stat-number">8</span>
+              <span className="stat-label">Cuisines</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number">AI</span>
+              <span className="stat-label">Powered</span>
+            </div>
+          </div>
+        </header>
+
+        {/* How it Works Section */}
+        <section className="how-it-works">
+          <h2>How It Works</h2>
+          <div className="steps">
+            <div className="step">
+              <h3>1. Upload or Enter</h3>
+              <p>Upload a photo of your ingredients or type them manually</p>
+            </div>
+            <div className="step">
+              <h3>2. Filter & Match</h3>
+              <p>Apply dietary preferences and get smart recipe matches</p>
+            </div>
+            <div className="step">
+              <h3>3. Cook & Enjoy</h3>
+              <p>Follow step-by-step instructions and rate your favorites</p>
+            </div>
+          </div>
+        </section>
 
       <section className="controls">
         <ImageUploader onDetected={(detected) => {
@@ -152,63 +167,73 @@ export default function Home() {
         </div>
 
         <div className="action-row">
-          <button onClick={fetchMatches} disabled={loading || !ingredients.length}>
-            Find Recipes
+          <button onClick={fetchMatches} disabled={loading || !ingredients.length} className="btn-primary">
+            🔍 Find Recipes
+          </button>
+          <button 
+            onClick={fetchAiRecipes} 
+            disabled={aiLoading || !ingredients.length}
+            className="btn-ai"
+          >
+            {aiLoading ? '⏳ Loading...' : '🤖 Fetch AI Recipes'}
           </button>
           <button 
             onClick={() => setShowFavorites(!showFavorites)} 
             className="btn-secondary"
           >
-            {showFavorites ? 'Show All' : 'Show Favorites'}
+            {showFavorites ? '📋 Show All' : '⭐ Show Favorites'}
           </button>
         </div>
+        {aiError && <div className="error-msg">{aiError}</div>}
       </section>
 
       <section className="results">
-        {loading && <div className="loading">Searching recipes...</div>}
+        {loading && <div className="loading">🔍 Searching recipes...</div>}
+        {aiLoading && <div className="loading">🤖 Fetching AI recipes...</div>}
         {results && results.error && <div className="error">{results.error}</div>}
         {results && results.matches && <RecipeList matches={results.matches} showFavorites={showFavorites} />}
-        {!results && !loading && <p className="hint">Enter ingredients or upload an image to start discovering delicious recipes!</p>}
+        {!results && !loading && <p className="hint">👋 Enter ingredients or upload an image to start discovering delicious recipes!</p>}
       </section>
 
-      {/* Footer */}
-      <footer className="footer">
-        <p>Built using Next.js & React</p>
-        <p className="footer-meta">
-          <span>20+ Recipes</span> • <span>8 Cuisines</span> • <span>Smart AI Matching</span>
-        </p>
+        {/* Footer */}
+        <footer className="footer">
+          <p>Built using Next.js & React</p>
+          <p className="footer-meta">
+            <span>30+ Recipes</span> • <span>8 Cuisines</span> • <span>Smart AI Matching</span>
+          </p>
 
-        {/* Features relocated to footer */}
-        <section className="features-footer">
-          <h3>Key Features</h3>
-          <div className="feature-grid small">
-            <div className="feature-card">
-              <h4>Smart Matching</h4>
-              <p>Algorithmic matches with substitution suggestions</p>
+          {/* Features relocated to footer */}
+          <section className="features-footer">
+            <h3>Key Features</h3>
+            <div className="feature-grid small">
+              <div className="feature-card">
+                <h4>Smart Matching</h4>
+                <p>Algorithmic matches with substitution suggestions</p>
+              </div>
+              <div className="feature-card">
+                <h4>Dietary Filters</h4>
+                <p>Vegetarian, vegan, and gluten-free options</p>
+              </div>
+              <div className="feature-card">
+                <h4>Time & Difficulty</h4>
+                <p>Filter by cooking time and skill level</p>
+              </div>
+              <div className="feature-card">
+                <h4>Nutrition Info</h4>
+                <p>Calories, protein, carbs and fat per recipe</p>
+              </div>
+              <div className="feature-card">
+                <h4>Rate & Save</h4>
+                <p>Rate recipes and save your favorites</p>
+              </div>
+              <div className="feature-card">
+                <h4>Mobile Ready</h4>
+                <p>Responsive across devices</p>
+              </div>
             </div>
-            <div className="feature-card">
-              <h4>Dietary Filters</h4>
-              <p>Vegetarian, vegan, and gluten-free options</p>
-            </div>
-            <div className="feature-card">
-              <h4>Time & Difficulty</h4>
-              <p>Filter by cooking time and skill level</p>
-            </div>
-            <div className="feature-card">
-              <h4>Nutrition Info</h4>
-              <p>Calories, protein, carbs and fat per recipe</p>
-            </div>
-            <div className="feature-card">
-              <h4>Rate & Save</h4>
-              <p>Rate recipes and save your favorites</p>
-            </div>
-            <div className="feature-card">
-              <h4>Mobile Ready</h4>
-              <p>Responsive across devices</p>
-            </div>
-          </div>
-        </section>
-      </footer>
-    </main>
+          </section>
+        </footer>
+      </main>
+    </>
   );
 }
