@@ -14,7 +14,7 @@ export default function RecipeList({ matches = [], showFavorites = false }) {
   
   if (!displayList.length) {
     return <p className="no-results">
-      {showFavorites ? '❤️ No favorite recipes yet. Start adding some!' : 'No matching recipes found. Try adjusting your filters.'}
+      {showFavorites ? 'No favorite recipes yet. Start adding some!' : 'No matching recipes found. Try adjusting your filters.'}
     </p>;
   }
   

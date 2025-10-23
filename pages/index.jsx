@@ -40,7 +40,7 @@ export default function Home() {
     <main className="container">
       {/* Hero Section */}
       <header className="hero">
-        <h1>🍳 Smart Recipe Generator</h1>
+        <h1>Smart Recipe Generator</h1>
         <p className="tagline">Turn your ingredients into delicious meals with AI-powered suggestions</p>
         <div className="stats">
           <div className="stat-card">
@@ -65,58 +65,20 @@ export default function Home() {
             <h2>How It Works</h2>
             <div className="steps">
               <div className="step">
-                <div className="step-icon">📷</div>
                 <h3>1. Upload or Enter</h3>
                 <p>Upload a photo of your ingredients or type them manually</p>
               </div>
               <div className="step">
-                <div className="step-icon">🎯</div>
                 <h3>2. Filter & Match</h3>
                 <p>Apply dietary preferences and get smart recipe matches</p>
               </div>
               <div className="step">
-                <div className="step-icon">🍽️</div>
                 <h3>3. Cook & Enjoy</h3>
                 <p>Follow step-by-step instructions and rate your favorites</p>
               </div>
             </div>
           </section>
-
-          <section className="features">
-            <h2>Key Features</h2>
-            <div className="feature-grid">
-              <div className="feature-card">
-                <span className="feature-icon">🤖</span>
-                <h3>Smart Matching</h3>
-                <p>Advanced algorithm matches ingredients with substitution suggestions</p>
-              </div>
-              <div className="feature-card">
-                <span className="feature-icon">🥗</span>
-                <h3>Dietary Filters</h3>
-                <p>Vegetarian, vegan, and gluten-free options</p>
-              </div>
-              <div className="feature-card">
-                <span className="feature-icon">⏱️</span>
-                <h3>Time & Difficulty</h3>
-                <p>Filter by cooking time and skill level</p>
-              </div>
-              <div className="feature-card">
-                <span className="feature-icon">📊</span>
-                <h3>Nutrition Info</h3>
-                <p>Calorie and protein data for every recipe</p>
-              </div>
-              <div className="feature-card">
-                <span className="feature-icon">⭐</span>
-                <h3>Rate & Save</h3>
-                <p>Rate recipes and save your favorites</p>
-              </div>
-              <div className="feature-card">
-                <span className="feature-icon">📱</span>
-                <h3>Mobile Ready</h3>
-                <p>Fully responsive design for all devices</p>
-              </div>
-            </div>
-          </section>
+          {/* features moved to footer for a cleaner hero section */}
         </>
       )}
 
@@ -172,18 +134,49 @@ export default function Home() {
       </section>
 
       <section className="results">
-        {loading && <div className="loading">🔍 Searching recipes...</div>}
-        {results && results.error && <div className="error">⚠️ {results.error}</div>}
+        {loading && <div className="loading">Searching recipes...</div>}
+        {results && results.error && <div className="error">{results.error}</div>}
         {results && results.matches && <RecipeList matches={results.matches} showFavorites={showFavorites} />}
-        {!results && !loading && <p className="hint">💡 Enter ingredients or upload an image to start discovering delicious recipes!</p>}
+        {!results && !loading && <p className="hint">Enter ingredients or upload an image to start discovering delicious recipes!</p>}
       </section>
 
       {/* Footer */}
       <footer className="footer">
-        <p>Built with ❤️ using Next.js & React</p>
+        <p>Built using Next.js & React</p>
         <p className="footer-meta">
           <span>20+ Recipes</span> • <span>8 Cuisines</span> • <span>Smart AI Matching</span>
         </p>
+
+        {/* Features relocated to footer */}
+        <section className="features-footer">
+          <h3>Key Features</h3>
+          <div className="feature-grid small">
+            <div className="feature-card">
+              <h4>Smart Matching</h4>
+              <p>Algorithmic matches with substitution suggestions</p>
+            </div>
+            <div className="feature-card">
+              <h4>Dietary Filters</h4>
+              <p>Vegetarian, vegan, and gluten-free options</p>
+            </div>
+            <div className="feature-card">
+              <h4>Time & Difficulty</h4>
+              <p>Filter by cooking time and skill level</p>
+            </div>
+            <div className="feature-card">
+              <h4>Nutrition Info</h4>
+              <p>Calories, protein, carbs and fat per recipe</p>
+            </div>
+            <div className="feature-card">
+              <h4>Rate & Save</h4>
+              <p>Rate recipes and save your favorites</p>
+            </div>
+            <div className="feature-card">
+              <h4>Mobile Ready</h4>
+              <p>Responsive across devices</p>
+            </div>
+          </div>
+        </section>
       </footer>
     </main>
   );

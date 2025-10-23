@@ -31,7 +31,9 @@ export default function RecipeCard({ recipe }) {
 
   const adjustedNutrition = {
     calories: Math.round((recipe.nutrition?.calories || 0) * servings),
-    protein: Math.round((recipe.nutrition?.protein || 0) * servings)
+    protein: Math.round((recipe.nutrition?.protein || 0) * servings),
+    carbs: Math.round((recipe.nutrition?.carbs || 0) * servings),
+    fat: Math.round((recipe.nutrition?.fat || 0) * servings)
   };
 
   return (
@@ -75,7 +77,7 @@ export default function RecipeCard({ recipe }) {
           
           {recipe.substitutionDetails && recipe.substitutionDetails.length > 0 && (
             <div className="substitutions">
-              <h4>💡 Suggested Substitutions</h4>
+                  <h4>Suggested Substitutions</h4>
               <ul>
                 {recipe.substitutionDetails.map((sub, i) => (
                   <li key={i}>
@@ -91,12 +93,14 @@ export default function RecipeCard({ recipe }) {
           
           <h4>Nutrition (for {servings} serving{servings>1?'s':''})</h4>
           <div className="nutrition-info">
-            <span>🔥 Calories: {adjustedNutrition.calories}</span>
-            <span>💪 Protein: {adjustedNutrition.protein}g</span>
+            <span>Calories: {adjustedNutrition.calories}</span>
+            <span>Protein: {adjustedNutrition.protein} g</span>
+            <span>Carbs: {adjustedNutrition.carbs} g</span>
+            <span>Fat: {adjustedNutrition.fat} g</span>
           </div>
           
           {recipe.substitutionsSuggested > 0 && (
-            <div className="hint">💡 {recipe.substitutionsSuggested} ingredient substitution{recipe.substitutionsSuggested>1?'s':''} available</div>
+            <div className="hint">{recipe.substitutionsSuggested} ingredient substitution{recipe.substitutionsSuggested>1?'s':''} available</div>
           )}
         </div>
       )}
