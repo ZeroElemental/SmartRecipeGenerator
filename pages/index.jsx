@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import ImageUploader from '../components/ImageUploader';
 import IngredientInput from '../components/IngredientInput';
 import RecipeList from '../components/RecipeList';
+import RecipeCard from '../components/RecipeCard';
 
 export default function Home() {
   const [ingredients, setIngredients] = useState([]);
@@ -10,6 +11,8 @@ export default function Home() {
   const [maxTime, setMaxTime] = useState('any');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
   const [showFavorites, setShowFavorites] = useState(false);
 
   async function fetchMatches() {
@@ -26,6 +29,34 @@ export default function Home() {
       console.error(e);
       setResults({ error: 'Matching failed. Please try again.' });
     } finally {
+  
+        async function fetchAiRecipes() {
+          setAiLoading(true);
+          setAiError('');
+          try {
+            const res = await fetch('/api/aiRecipes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ingredients, count: 6 })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              setAiError(data.error || 'AI service error');
+              return;
+            }
+
+            // Merge AI recipes with existing list while avoiding id collisions
+            const aiRecipes = data.recipes || [];
+            const existingIds = new Set(results.matches.map(r => r.id));
+            const merged = [...results.matches];
+            aiRecipes.forEach(r => { if (!existingIds.has(r.id)) merged.push(r); });
+            setResults({ matches: merged });
+          } catch (e) {
+            setAiError('Failed to fetch AI recipes');
+          } finally {
+            setAiLoading(false);
+          }
+        }
       setLoading(false);
     }
   }
