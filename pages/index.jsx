@@ -48,16 +48,18 @@ export default function Home() {
         body: JSON.stringify({ ingredients, diet, difficulty, maxTime, count: 6 })
       });
       const data = await res.json();
-      if (!res.ok) {
-        setAiError(data.error || 'AI service error');
-        return;
+      
+      // Show message if API returned one (fallback or error info)
+      if (data.message) {
+        setAiError(data.message);
       }
 
       // Replace with AI recipes (add matchPercentage for consistency)
       const aiRecipes = (data.recipes || []).map(r => ({ ...r, matchPercentage: 100, isAI: true }));
       setResults({ matches: aiRecipes });
     } catch (e) {
-      setAiError('Failed to fetch AI recipes');
+      console.error('AI fetch error:', e);
+      setAiError('Failed to fetch AI recipes: ' + e.message);
     } finally {
       setAiLoading(false);
     }

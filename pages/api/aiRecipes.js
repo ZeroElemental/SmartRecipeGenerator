@@ -29,12 +29,15 @@ export default async function handler(req, res) {
 
   if (!GEMINI_KEY) {
     // No key: return fallback results
-    return res.status(200).json({ source: 'static', recipes: fallback() });
+    console.log('No GEMINI_API_KEY found, using static fallback');
+    return res.status(200).json({ source: 'static', recipes: fallback(), message: 'Using static recipes - set GEMINI_API_KEY to enable AI' });
   }
 
   // Prompt asking for strict JSON array matching our schema
   const prompt = `You are a helpful recipe generator. Given available ingredients: ${ingredients.join(', ') || 'none'}, dietary preference: ${diet}, difficulty: ${difficulty}, maxTime: ${maxTime}. Please generate ${count} recipe objects strictly as a JSON array. Each recipe object must have these fields: id (unique short string), title, cuisine, difficulty (easy|medium|hard), time (minutes integer), diet (array), ingredients (array of strings), steps (array of short strings), nutrition (object with calories, protein, carbs, fat as integers), description (short). Return only valid JSON with no commentary.`;
 
+  console.log('Calling Gemini API with model:', model);
+  
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
     const body = {
@@ -58,12 +61,27 @@ export default async function handler(req, res) {
 
     if (!resp.ok) {
       const txt = await resp.text();
-      console.error('Gemini error', resp.status, txt);
-      return res.status(500).json({ error: 'AI service error', details: txt });
+      console.error('Gemini API error:', resp.status, txt);
+      // Return fallback instead of error
+      return res.status(200).json({ 
+        source: 'static-fallback', 
+        recipes: fallback(),
+        message: `Gemini API error (${resp.status}), using static recipes. Check your API key and quota.`
+      });
     }
 
     const data = await resp.json();
+    console.log('Gemini response received');
     const contentText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    if (!contentText) {
+      console.error('No content in Gemini response:', JSON.stringify(data));
+      return res.status(200).json({ 
+        source: 'static-fallback', 
+        recipes: fallback(),
+        message: 'Gemini returned empty response, using static recipes'
+      });
+    }
 
     // Try to extract JSON substring
     const firstBracket = contentText.indexOf('[');
@@ -74,17 +92,27 @@ export default async function handler(req, res) {
     let recipes = [];
     try {
       recipes = JSON.parse(jsonText);
+      console.log('Successfully parsed', recipes.length, 'recipes from Gemini');
     } catch (e) {
-      console.error('Gemini JSON parse error:', e.message);
-      return res.status(200).json({ source: 'static-fallback', recipes: fallback() });
+      console.error('Gemini JSON parse error:', e.message, 'Content:', contentText.substring(0, 200));
+      return res.status(200).json({ 
+        source: 'static-fallback', 
+        recipes: fallback(),
+        message: 'Could not parse Gemini response, using static recipes'
+      });
     }
 
     // Ensure unique ids and basic normalization
     recipes = (Array.isArray(recipes) ? recipes : []).map((r, i) => ({ id: r.id || `ai_${Date.now()}_${i}`, ...r }));
 
+    console.log('Returning', recipes.length, 'AI-generated recipes');
     return res.status(200).json({ source: 'ai-gemini', recipes });
   } catch (err) {
-    console.error('Gemini fetch failed', err);
-    return res.status(500).json({ error: 'Failed to fetch from AI service', details: String(err) });
+    console.error('Gemini fetch failed:', err.message);
+    return res.status(200).json({ 
+      source: 'static-fallback', 
+      recipes: fallback(),
+      message: `AI service error: ${err.message}. Using static recipes.`
+    });
   }
 }
