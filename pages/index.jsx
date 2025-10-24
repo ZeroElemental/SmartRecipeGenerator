@@ -11,8 +11,6 @@ export default function Home() {
   const [maxTime, setMaxTime] = useState('any');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState('');
   const [showFavorites, setShowFavorites] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -35,33 +33,6 @@ export default function Home() {
       setResults({ error: 'Matching failed. Please try again.' });
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function fetchAiRecipes() {
-    setAiLoading(true);
-    setAiError('');
-    try {
-      const res = await fetch('/api/aiRecipes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingredients, diet, difficulty, maxTime, count: 6 })
-      });
-      const data = await res.json();
-      
-      // Show message if API returned one (fallback or error info)
-      if (data.message) {
-        setAiError(data.message);
-      }
-
-      // Replace with AI recipes (add matchPercentage for consistency)
-      const aiRecipes = (data.recipes || []).map(r => ({ ...r, matchPercentage: 100, isAI: true }));
-      setResults({ matches: aiRecipes });
-    } catch (e) {
-      console.error('AI fetch error:', e);
-      setAiError('Failed to fetch AI recipes: ' + e.message);
-    } finally {
-      setAiLoading(false);
     }
   }
 
@@ -97,16 +68,16 @@ export default function Home() {
           <p className="tagline">Turn your ingredients into delicious meals with AI-powered suggestions</p>
           <div className="stats">
             <div className="stat-card">
-              <span className="stat-number">30+</span>
+              <span className="stat-number">1000+</span>
               <span className="stat-label">Recipes</span>
             </div>
             <div className="stat-card">
-              <span className="stat-number">8</span>
+              <span className="stat-number">20+</span>
               <span className="stat-label">Cuisines</span>
             </div>
             <div className="stat-card">
-              <span className="stat-number">AI</span>
-              <span className="stat-label">Powered</span>
+              <span className="stat-number">Smart</span>
+              <span className="stat-label">Matching</span>
             </div>
           </div>
         </header>
@@ -173,25 +144,16 @@ export default function Home() {
             🔍 Find Recipes
           </button>
           <button 
-            onClick={fetchAiRecipes} 
-            disabled={aiLoading || !ingredients.length}
-            className="btn-ai"
-          >
-            {aiLoading ? '⏳ Loading...' : '🤖 Fetch AI Recipes'}
-          </button>
-          <button 
             onClick={() => setShowFavorites(!showFavorites)} 
             className="btn-secondary"
           >
             {showFavorites ? '📋 Show All' : '⭐ Show Favorites'}
           </button>
         </div>
-        {aiError && <div className="error-msg">{aiError}</div>}
       </section>
 
       <section className="results">
         {loading && <div className="loading">🔍 Searching recipes...</div>}
-        {aiLoading && <div className="loading">🤖 Fetching AI recipes...</div>}
         {results && results.error && <div className="error">{results.error}</div>}
         {results && results.matches && <RecipeList matches={results.matches} showFavorites={showFavorites} />}
         {!results && !loading && <p className="hint">👋 Enter ingredients or upload an image to start discovering delicious recipes!</p>}
@@ -201,7 +163,7 @@ export default function Home() {
         <footer className="footer">
           <p>Built using Next.js & React</p>
           <p className="footer-meta">
-            <span>30+ Recipes</span> • <span>8 Cuisines</span> • <span>Smart AI Matching</span>
+            <span>1000+ Recipes</span> • <span>20+ Cuisines</span> • <span>Smart Matching</span>
           </p>
 
           {/* Features relocated to footer */}
