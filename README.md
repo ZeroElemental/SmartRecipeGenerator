@@ -5,25 +5,29 @@ An intelligent web application that suggests recipes based on available ingredie
 ## 🌟 Features
 
 ### Core Functionality
+- **🤖 AI-Powered Recipe Generation**: Generate custom recipes using Google Gemini AI based on your ingredients
 - **📷 Image-Based Ingredient Detection**: Upload photos of ingredients for automatic detection (stub implementation ready for ML integration)
 - **🔍 Smart Recipe Matching**: Advanced algorithm that matches recipes based on available ingredients
 - **🔄 Ingredient Substitutions**: Intelligent suggestions for ingredient alternatives
 - **🎯 Advanced Filtering**: Filter by dietary preferences, difficulty level, and cooking time
 - **⭐ Ratings & Favorites**: Rate recipes and save favorites with local storage persistence
-- **📊 Nutritional Information**: Detailed calorie and protein information with serving size adjustment
+- **📊 Nutritional Information**: Complete nutrition info (calories, protein, carbs, fat) with serving size adjustment
 - **📱 Mobile Responsive**: Fully responsive design optimized for all devices
+- **🎨 Modern UI**: Vibrant gradients, sidebar navigation, and clear section dividers
 
 ### Technical Highlights
-- **Recipe Database**: 20+ diverse recipes covering multiple cuisines
+- **AI Integration**: Google Gemini 1.5 Pro for intelligent recipe generation
+- **Recipe Database**: 30+ diverse recipes covering multiple cuisines
 - **Smart Matching Algorithm**: 
   - Exact ingredient matching
   - Similar ingredient recognition (e.g., "tomato" matches "cherry tomato")
   - Substitution suggestions with weighted scoring
+  - Filters out 0% matches for relevant results
   - Sort by match score, user ratings, and cooking time
 - **User Experience**:
   - Loading states and animations
   - Error boundaries for graceful error handling
-  - Intuitive UI with emoji icons
+  - Sidebar navigation with Home and Favorites
   - Real-time filtering and search
 
 ## 🚀 Quick Start
@@ -31,6 +35,7 @@ An intelligent web application that suggests recipes based on available ingredie
 ### Prerequisites
 - Node.js 14.x or higher
 - npm or yarn
+- Google Gemini API key (for AI recipe generation)
 
 ### Local Development
 
@@ -44,12 +49,25 @@ An intelligent web application that suggests recipes based on available ingredie
    npm install
    ```
 
-3. **Run Development Server**
+3. **Configure Environment Variables**
+   
+   Create a `.env.local` file in the root directory:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   GEMINI_MODEL=gemini-1.5-pro
+   ```
+   
+   **Get a Gemini API Key:**
+   - Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+   - Click "Create API Key"
+   - Copy the key and add it to `.env.local`
+
+4. **Run Development Server**
    ```powershell
    npm run dev
    ```
 
-4. **Open in Browser**
+5. **Open in Browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ### Build for Production
@@ -64,10 +82,11 @@ npm start
 
 Vercel provides zero-configuration deployment for Next.js applications.
 
-1. **Install Vercel CLI** (optional)
-   ```powershell
-   npm install -g vercel
-   ```
+1. **Set Environment Variables**
+   - Go to your Vercel project → Settings → Environment Variables
+   - Add:
+     - `GEMINI_API_KEY` = your API key
+     - `GEMINI_MODEL` = gemini-1.5-pro (optional)
 
 2. **Deploy via Git (Easiest)**
    - Push your code to GitHub
