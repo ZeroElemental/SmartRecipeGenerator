@@ -6,9 +6,9 @@ export default async function handler(req, res) {
 
   const { ingredients = [], diet = 'any', difficulty = 'any', maxTime = 'any', count = 5 } = req.body || {};
 
-  // Try OpenAI if API key present
-  const OPENAI_KEY = process.env.OPENAI_API_KEY;
-  const model = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
+  // Use Google Gemini via Generative Language API
+  const GEMINI_KEY = process.env.GEMINI_API_KEY;
+  const model = process.env.GEMINI_MODEL || 'gemini-1.5-pro';
 
   // Helper to return static fallback recipes from public/recipes.json
   const fallback = () => {
@@ -27,61 +27,64 @@ export default async function handler(req, res) {
     }
   };
 
-  if (!OPENAI_KEY) {
+  if (!GEMINI_KEY) {
     // No key: return fallback results
     return res.status(200).json({ source: 'static', recipes: fallback() });
   }
 
-  // Build a robust prompt asking for JSON output with strict schema
-  const prompt = `You are a helpful recipe generator. Given available ingredients: ${ingredients.join(', ') || 'none'}, dietary preference: ${diet}, difficulty: ${difficulty}, maxTime: ${maxTime}. Please generate ${count} recipe objects strictly as a JSON array. Each recipe object must have these fields: id (unique short string), title, cuisine, difficulty (easy|medium|hard), time (minutes integer), diet (array), ingredients (array of strings), steps (array of short strings), nutrition (object with calories, protein, carbs, fat as integers), description (short). Return only valid JSON — no extra commentary.`;
+  // Prompt asking for strict JSON array matching our schema
+  const prompt = `You are a helpful recipe generator. Given available ingredients: ${ingredients.join(', ') || 'none'}, dietary preference: ${diet}, difficulty: ${difficulty}, maxTime: ${maxTime}. Please generate ${count} recipe objects strictly as a JSON array. Each recipe object must have these fields: id (unique short string), title, cuisine, difficulty (easy|medium|hard), time (minutes integer), diet (array), ingredients (array of strings), steps (array of short strings), nutrition (object with calories, protein, carbs, fat as integers), description (short). Return only valid JSON with no commentary.`;
 
   try {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_KEY}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: 'You are a strict JSON-producing assistant.' },
-          { role: 'user', content: prompt }
-        ],
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(GEMINI_KEY)}`;
+    const body = {
+      contents: [
+        {
+          role: 'user',
+          parts: [ { text: prompt } ]
+        }
+      ],
+      generationConfig: {
         temperature: 0.2,
-        max_tokens: 1000,
-        n: 1
-      })
+        maxOutputTokens: 1200
+      }
+    };
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
     });
 
     if (!resp.ok) {
       const txt = await resp.text();
-      console.error('OpenAI error', resp.status, txt);
+      console.error('Gemini error', resp.status, txt);
       return res.status(500).json({ error: 'AI service error', details: txt });
     }
 
     const data = await resp.json();
-    const content = data?.choices?.[0]?.message?.content || '';
+    const contentText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // Try to extract JSON substring
-    const firstBracket = content.indexOf('[');
-    const lastBracket = content.lastIndexOf(']');
-    let jsonText = content;
-    if (firstBracket !== -1 && lastBracket !== -1) jsonText = content.slice(firstBracket, lastBracket + 1);
+    const firstBracket = contentText.indexOf('[');
+    const lastBracket = contentText.lastIndexOf(']');
+    let jsonText = contentText;
+    if (firstBracket !== -1 && lastBracket !== -1) jsonText = contentText.slice(firstBracket, lastBracket + 1);
 
     let recipes = [];
-    try { recipes = JSON.parse(jsonText); } catch (e) {
-      // fallback: return static
-      console.error('JSON parse error:', e.message);
+    try {
+      recipes = JSON.parse(jsonText);
+    } catch (e) {
+      console.error('Gemini JSON parse error:', e.message);
       return res.status(200).json({ source: 'static-fallback', recipes: fallback() });
     }
 
     // Ensure unique ids and basic normalization
-    recipes = recipes.map((r, i) => ({ id: r.id || `ai_${Date.now()}_${i}`, ...r }));
+    recipes = (Array.isArray(recipes) ? recipes : []).map((r, i) => ({ id: r.id || `ai_${Date.now()}_${i}`, ...r }));
 
-    return res.status(200).json({ source: 'ai', recipes });
+    return res.status(200).json({ source: 'ai-gemini', recipes });
   } catch (err) {
-    console.error('AI fetch failed', err);
+    console.error('Gemini fetch failed', err);
     return res.status(500).json({ error: 'Failed to fetch from AI service', details: String(err) });
   }
 }
