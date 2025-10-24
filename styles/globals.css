@@ -569,15 +569,20 @@ button:not(:disabled):hover {
 
 .loading {
   text-align: center;
-  padding: 40px;
-  font-size: 1.2rem;
-  color: #3498db;
-  animation: pulse 1.5s infinite;
+  padding: 60px 40px;
+  font-size: 1.3rem;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+  animation: shimmer 2s infinite;
+  background-size: 200% 100%;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .error {
@@ -617,16 +622,37 @@ button:not(:disabled):hover {
 /* Recipe Card */
 .recipe-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
   animation: fadeIn 0.5s;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.recipe-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.recipe-card:hover::before {
+  transform: scaleX(1);
 }
 
 .recipe-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.25);
+  border-color: rgba(102, 126, 234, 0.2);
 }
 
 @keyframes fadeIn {
@@ -653,11 +679,24 @@ button:not(:disabled):hover {
   font-size: 1.5rem;
   padding: 4px;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .btn-favorite:hover {
-  transform: scale(1.2);
+  transform: scale(1.3) rotate(10deg);
+  filter: drop-shadow(0 4px 8px rgba(255,0,100,0.3));
+}
+
+.btn-favorite.active {
+  animation: heartbeat 0.6s ease;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.3); }
+  50% { transform: scale(1.1); }
+  75% { transform: scale(1.25); }
 }
 
 .meta {
@@ -671,11 +710,19 @@ button:not(:disabled):hover {
 }
 
 .score {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 4px 12px;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-weight: 600;
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .recipe-card > p {
@@ -695,12 +742,16 @@ button:not(:disabled):hover {
 }
 
 .card-actions > button {
-  background: #3498db;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  padding: 10px 20px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .card-actions > button:hover {
-  background: #2980b9;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  transform: translateY(-2px);
 }
 
 .rating {
@@ -752,13 +803,21 @@ button:not(:disabled):hover {
 }
 
 .servings-control button {
-  background: #3498db;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   padding: 0;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s;
+}
+
+.servings-control button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
 }
 
 .servings-control span {
@@ -784,17 +843,41 @@ button:not(:disabled):hover {
 }
 
 .nutrition-info {
-  display: flex;
-  gap: 20px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  margin: 16px 0;
 }
 
 .nutrition-info span {
-  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 600;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s;
 }
+
+.nutrition-info span:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+}
+
+.nutrition-info span::before {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.nutrition-info span:nth-child(1)::before { content: '🔥'; }
+.nutrition-info span:nth-child(2)::before { content: '💪'; }
+.nutrition-info span:nth-child(3)::before { content: '🍞'; }
+.nutrition-info span:nth-child(4)::before { content: '🥑'; }
 
 .substitutions {
   background: #fff3e0;
